@@ -6,3 +6,8 @@
 //
 
 import Foundation
+
+class Constants {
+
+    static let API_BASE_URL = "https://pokeapi.co/api/v2/"
+}
