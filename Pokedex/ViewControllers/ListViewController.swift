@@ -32,14 +32,11 @@ class ListViewController: UIViewController, UITableViewDataSource, UISearchBarDe
         
         self.navigationItem.title = "Pokedex"
         
-        loadInitialPokemons()
+        loadAllPokemons()
         
         
     }
     
-    private func loadInitialPokemons() {
-            searchPokemon(name: "pikachu") 
-        }
     
     //Actualizar los datos de la vista
     override func viewWillAppear(_ animated: Bool) {
@@ -60,6 +57,7 @@ class ListViewController: UIViewController, UITableViewDataSource, UISearchBarDe
         return cell
     }
     
+    //Función para manejar las mayúsculas del teclado a la hora de buscar
     private func setupSearchBar() {
         if let searchTextField = searchBar.value(forKey: "searchField") as? UITextField {
             searchTextField.autocapitalizationType = .none
@@ -73,7 +71,7 @@ class ListViewController: UIViewController, UITableViewDataSource, UISearchBarDe
         searchPokemon(name: searchText.lowercased())
     }
     
-    // Maneja el texto de búsqueda con debounce
+    // Maneja el texto de búsqueda con margen de tiempo
     internal func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchTimer?.invalidate()
         
@@ -123,6 +121,44 @@ class ListViewController: UIViewController, UITableViewDataSource, UISearchBarDe
             }
         }
     }
+
+
+        private func loadAllPokemons() {
+            guard !isLoading else { return }
+            
+            isLoading = true
+            pokemonProvider.loadAllPokemons { [weak self] result in
+                guard let self = self else { return }
+                
+                DispatchQueue.main.async {
+                    self.isLoading = false
+                    
+                    switch result {
+                    case .success(let pokemons):
+                        self.pokemonList = pokemons
+                        self.tableView.reloadData()
+                        print("Todos los Pokémon cargados con éxito.")
+                        
+                    case .failure(let error):
+                        print("Error al cargar todos los Pokémon: \(error.localizedDescription)")
+                        let alert = UIAlertController(title: "Error", message: "No se pudieron cargar los Pokémon.", preferredStyle: .alert)
+                        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                        self.present(alert, animated: true, completion: nil)
+                }
+            }
+        }
+    }
+    
+    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
+        
+        if segue.identifier == "navigateToDetail" {
+            let viewController = segue.destination as! DetailViewController
+            let indexPath = tableView.indexPathForSelectedRow!
+            viewController.pokemon = pokemonList[indexPath.row]
+            tableView.deselectRow(at: indexPath, animated: false)
+        }
+    }
 }
     
     
+

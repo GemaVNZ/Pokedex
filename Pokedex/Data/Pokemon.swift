@@ -6,6 +6,7 @@
 //
 
 import Foundation
+import UIKit
 
 
 struct Pokemon: Codable {
@@ -20,6 +21,15 @@ struct Pokemon: Codable {
     //let characteristics: PokemonCharacteristic
 }
 
+struct PokemonListResponse: Codable {
+        let results: [PokemonEntry]
+}
+
+struct PokemonEntry: Codable {
+        let name: String
+        let url: String
+}
+
 struct Sprites: Codable {
     let frontDefault: String?
 
@@ -31,7 +41,7 @@ struct Sprites: Codable {
 struct PokemonType: Codable {
     let type: TypeName
     
-    struct TypeName: Codable {
+struct TypeName: Codable {
         let name: String
     }
 }
@@ -45,7 +55,7 @@ struct PokemonStat: Codable {
         case stat
     }
 
-    struct Stat: Codable {
+struct Stat: Codable {
         let name: String
     }
 }
@@ -53,24 +63,73 @@ struct PokemonStat: Codable {
 struct PokemonAbility: Codable {
     let ability: Ability
 
-    struct Ability: Codable {
+struct Ability: Codable {
         let name: String
     }
 }
 
 struct PokemonMove: Codable {
     let move: Move
-
+    
     struct Move: Codable {
         let name: String
     }
+}
+
+enum PokemonTypeEnum: String {
+    
+    case fire, water, grass, electric, psychic, ice, dragon, dark, fairy, fighting, poison, ground, flying, bug, rock, ghost, steel, normal
+    
+    //case fire = "fire"
+    //case water = "water"
+    //case grass = "grass"
+    //case electric = "electric"
+    //case psychic = "psychic"
+    
+    var icon: UIImage? {
+        switch self {
+        case .fire: return UIImage(named: "fire_icon")
+        case .water: return UIImage(named: "water_icon")
+            
+            
+            //case .water: return .blue
+            //case .grass: return .green
+            //case .electric: return .yellow
+            //case .psychic: return .purple
+            //case .ice: return .cyan
+            //case .dragon: return .orange
+            
+        case .grass:return UIImage(named: "fire_icon")
+        case .electric:return UIImage(named: "fire_icon")
+        case .psychic:return UIImage(named: "fire_icon")
+        case .ice:return UIImage(named: "fire_icon")
+        case .dragon:return UIImage(named: "fire_icon")
+        case .dark:return UIImage(named: "fire_icon")
+        case .fairy:return UIImage(named: "fire_icon")
+        case .fighting:return UIImage(named: "fire_icon")
+        case .poison:return UIImage(named: "fire_icon")
+        case .ground:return UIImage(named: "fire_icon")
+        case .flying:return UIImage(named: "fire_icon")
+        case .bug:return UIImage(named: "fire_icon")
+        case .rock:return UIImage(named: "fire_icon")
+        case .ghost:return UIImage(named: "fire_icon")
+        case .steel:return UIImage(named: "fire_icon")
+        case .normal:return UIImage(named: "fire_icon")
+        }
+    }
+}
+        
+    //static func from(name: String) -> PokemonTypeEnum? {
+      //      return PokemonTypeEnum(rawValue: name.lowercased())
+        //}
+
 
 //struct PokemonEvolution : Codable {
     //let name: String
     //let level: Int?
     //let condition: String?
     
-}
+
 
 //struct PokemonCharacteristic : Codable {
     //let description: String
