@@ -13,10 +13,8 @@ class DetailViewController: UIViewController {
     @IBOutlet weak var pokemonImageView: UIImageView!
     
     @IBOutlet weak var typeImageView: UIImageView!
-    @IBOutlet weak var typeTextView: UILabel!
 
-    
-    @IBOutlet weak var statsTextView: UITextView!
+    @IBOutlet weak var typeLabel: UILabel!
     
     @IBOutlet weak var statsStackView: UIStackView!
     
@@ -28,8 +26,6 @@ class DetailViewController: UIViewController {
     
     @IBOutlet weak var movesTextView: UITextView!
     
-    
-    @IBOutlet weak var typeContainerView: UIView!
     
     var pokemon : Pokemon?
     
@@ -60,13 +56,6 @@ class DetailViewController: UIViewController {
                 }
             }
         }
-        
-        if let firstType = pokemon.types.first?.type.name {
-                // Pasa el nombre del tipo a la función de configuración
-                configureTypeView(with: firstType)
-            } else {
-                typeContainerView.isHidden = true
-            }
         
         
         // Configura las estadísticas del Pokémon con barras de progreso
@@ -105,51 +94,28 @@ class DetailViewController: UIViewController {
                 // Configura los movimientos del Pokémon
         let moves = pokemon.moves.map {$0.move.name.capitalized }.joined(separator: "\n")
             movesTextView.text = "\(moves)"
+        
+        if let firstType = pokemon.types.first?.type.name {
+                configureTypeView(with: firstType)
+            }
     }
     
     private func configureTypeView(with type: String) {
         let typeName = type.lowercased()
         
-        // Configura la vista del tipo
-        /*typeContainerView.layer.cornerRadius = 10
-        typeContainerView.layer.masksToBounds = true
-        typeContainerView.backgroundColor = UIColor.lightGray // Ajusta el color según sea necesario*/
-        
-        let iconImageView = UIImageView()
-        let typeLabel = UILabel()
-        
-        // Configura el ícono
+        // Configura el ícono de tipo usando typeImageView
         if let pokemonType = PokemonTypeEnum(rawValue: typeName) {
-            iconImageView.image = pokemonType.icon
+            typeImageView.image = pokemonType.icon
         } else {
-            iconImageView.image = UIImage(named: "default_icon") // Imagen por defecto si el tipo no se encuentra
+            typeImageView.image = UIImage(named: "default_icon") 
         }
         
-        iconImageView.contentMode = .scaleAspectFit
-        
-        // Configura el texto
+        typeImageView.contentMode = .scaleAspectFit
+        // Configura el texto de tipo usando typeLabel
         typeLabel.text = type.capitalized
         typeLabel.textAlignment = .center
         typeLabel.numberOfLines = 0
         
-        // Añade las sub-vistas
-        /*typeContainerView.addSubview(iconImageView)
-        typeContainerView.addSubview(typeLabel)*/
-        
-        iconImageView.translatesAutoresizingMaskIntoConstraints = false
-        typeLabel.translatesAutoresizingMaskIntoConstraints = false
-        
-        /*NSLayoutConstraint.activate([
-            iconImageView.topAnchor.constraint(equalTo: typeContainerView.topAnchor, constant: 8),
-            iconImageView.centerXAnchor.constraint(equalTo: typeContainerView.centerXAnchor),
-            iconImageView.heightAnchor.constraint(equalToConstant: 40),
-            iconImageView.widthAnchor.constraint(equalToConstant: 40),
-            
-            typeLabel.topAnchor.constraint(equalTo: iconImageView.bottomAnchor, constant: 8),
-            typeLabel.leadingAnchor.constraint(equalTo: typeContainerView.leadingAnchor, constant: 8),
-            typeLabel.trailingAnchor.constraint(equalTo: typeContainerView.trailingAnchor, constant: -8),
-            typeLabel.bottomAnchor.constraint(equalTo: typeContainerView.bottomAnchor, constant: -8)
-        ])*/
     }
     
     

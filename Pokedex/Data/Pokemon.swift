@@ -78,27 +78,12 @@ struct PokemonMove: Codable {
 
 enum PokemonTypeEnum: String {
     
-    case fire, water, grass, electric, psychic, ice, dragon, dark, fairy, fighting, poison, ground, flying, bug, rock, ghost, steel, normal
-    
-    //case fire = "fire"
-    //case water = "water"
-    //case grass = "grass"
-    //case electric = "electric"
-    //case psychic = "psychic"
+    case fire, water, grass, electric, psychic, ice, dragon, dark, fairy, fighting, poison, ground, flying, bug, rock, ghost, steel, normal, error
     
     var icon: UIImage? {
         switch self {
         case .fire: return UIImage(named: "fire_icon")
         case .water: return UIImage(named: "water_icon")
-            
-            
-            //case .water: return .blue
-            //case .grass: return .green
-            //case .electric: return .yellow
-            //case .psychic: return .purple
-            //case .ice: return .cyan
-            //case .dragon: return .orange
-            
         case .grass:return UIImage(named: "fire_icon")
         case .electric:return UIImage(named: "fire_icon")
         case .psychic:return UIImage(named: "fire_icon")
@@ -115,13 +100,10 @@ enum PokemonTypeEnum: String {
         case .ghost:return UIImage(named: "fire_icon")
         case .steel:return UIImage(named: "fire_icon")
         case .normal:return UIImage(named: "fire_icon")
+        case .error:return UIImage(named:"defaul_icon")
         }
     }
 }
-        
-    //static func from(name: String) -> PokemonTypeEnum? {
-      //      return PokemonTypeEnum(rawValue: name.lowercased())
-        //}
 
 
 //struct PokemonEvolution : Codable {
