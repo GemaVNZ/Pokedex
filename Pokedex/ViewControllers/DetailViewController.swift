@@ -41,9 +41,6 @@ class DetailViewController: UIViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         
-        //navigationController?.navigationBar.prefersLargeTitles = true
-        //navigationController?.navigationBar.largeTitleTextAttributes = [NSAttributedString.Key.foregroundColor: UIColor.systemGray6]
-        
         contentView.roundCorners(radius: 32)
 
         // Actualiza la UI solo si hay datos de Pokémon disponibles
@@ -119,6 +116,13 @@ class DetailViewController: UIViewController {
                 }
             }
         }
+        
+    if let primaryType = pokemon.types.first?.type.name.lowercased(),
+        let typeEnum = PokemonTypeEnum(rawValue: primaryType) {
+        self.contentView.backgroundColor = typeEnum.pastelColor
+        } else {
+        self.contentView.backgroundColor = .white  // Color por defecto
+        }
 
         
         // Configura las estadísticas del Pokémon con barras de progreso
@@ -128,34 +132,6 @@ class DetailViewController: UIViewController {
             statsLabels[i].text = "\(stat.baseStat)"
             statsProgressViews[i].progress = Float(stat.baseStat) / 255.0
         }
-    /*for stat in pokemon.stats {
-                    let statsView = UIView()
-                    statsView.translatesAutoresizingMaskIntoConstraints = false
-                    let label = UILabel()
-                    let progressView = UIProgressView(progressViewStyle: .default)
-                    
-                    label.text = "\(stat.stat.name.capitalized): \(stat.baseStat)"
-                    progressView.progress = Float(stat.baseStat) / 255.0 
-                    
-                    statsView.addSubview(label)
-                    statsView.addSubview(progressView)
-                    
-                    label.translatesAutoresizingMaskIntoConstraints = false
-                    progressView.translatesAutoresizingMaskIntoConstraints = false
-                    
-                    NSLayoutConstraint.activate([
-                        label.leadingAnchor.constraint(equalTo: statsView.leadingAnchor),
-                        label.topAnchor.constraint(equalTo: statsView.topAnchor),
-                        label.trailingAnchor.constraint(equalTo: progressView.leadingAnchor, constant: -8),
-                        progressView.centerYAnchor.constraint(equalTo: label.centerYAnchor),
-                        progressView.trailingAnchor.constraint(equalTo: statsView.trailingAnchor),
-                        progressView.widthAnchor.constraint(equalToConstant: 150),
-                        progressView.heightAnchor.constraint(equalToConstant: 10)
-                    ])
-                    
-                    statsStackView.addArrangedSubview(statsView)
-                }*/
-        
                 // Configura las habilidades del Pokémon
         let abilities = pokemon.abilities.map {$0.ability.name.capitalized }.joined(separator: "\n")
             abilitiesTextView.text = "\(abilities)"
@@ -183,9 +159,13 @@ class DetailViewController: UIViewController {
 
                 //Se añade el color dependiendo del tipo de pokemon
                 if let typeEnum = PokemonTypeEnum(rawValue: typeName) {
-                    typeView.backgroundColor = typeEnum.color
+                    typeView.backgroundColor = typeEnum.backgroundColor
+                    typeView.layer.borderColor = typeEnum.borderColor.cgColor
+                    typeView.layer.borderWidth = 2.0
                 } else {
                     typeView.backgroundColor = .gray
+                    typeView.layer.borderColor = UIColor.darkGray.cgColor
+                    typeView.layer.borderWidth = 2.0
                 }
 
                 // Se crea una etiqueta para diseñar el formato de los tipos
