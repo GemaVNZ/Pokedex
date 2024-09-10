@@ -79,32 +79,31 @@ struct PokemonMove: Codable {
 enum PokemonTypeEnum: String {
     
     case fire, water, grass, electric, psychic, ice, dragon, dark, fairy, fighting, poison, ground, flying, bug, rock, ghost, steel, normal, error
-    
-    var icon: UIImage? {
-        switch self {
-        case .fire: return UIImage(named: "fire_icon")
-        case .water: return UIImage(named: "water_icon")
-        case .grass:return UIImage(named: "fire_icon")
-        case .electric:return UIImage(named: "fire_icon")
-        case .psychic:return UIImage(named: "fire_icon")
-        case .ice:return UIImage(named: "fire_icon")
-        case .dragon:return UIImage(named: "fire_icon")
-        case .dark:return UIImage(named: "fire_icon")
-        case .fairy:return UIImage(named: "fire_icon")
-        case .fighting:return UIImage(named: "fire_icon")
-        case .poison:return UIImage(named: "fire_icon")
-        case .ground:return UIImage(named: "fire_icon")
-        case .flying:return UIImage(named: "fire_icon")
-        case .bug:return UIImage(named: "fire_icon")
-        case .rock:return UIImage(named: "fire_icon")
-        case .ghost:return UIImage(named: "fire_icon")
-        case .steel:return UIImage(named: "fire_icon")
-        case .normal:return UIImage(named: "fire_icon")
-        case .error:return UIImage(named:"defaul_icon")
+        
+        var color: UIColor {
+            switch self {
+            case .fire: return .red
+            case .water: return .blue
+            case .grass: return .green
+            case .electric: return .yellow
+            case .psychic: return .purple
+            case .ice: return UIColor.systemGray
+            case .dragon: return UIColor.systemYellow
+            case .dark: return UIColor.systemYellow
+            case .fairy: return UIColor.systemYellow
+            case .fighting: return UIColor.systemYellow
+            case .poison: return UIColor.systemPurple
+            case .ground: return UIColor.systemYellow
+            case .flying: return UIColor.systemYellow
+            case .bug: return UIColor.systemYellow
+            case .rock: return UIColor.systemYellow
+            case .ghost: return UIColor.systemYellow
+            case .steel: return UIColor.systemYellow
+            case .normal: return UIColor.systemYellow
+            case .error : return UIColor.lightGray
+            }
         }
-    }
 }
-
 
 //struct PokemonEvolution : Codable {
     //let name: String
