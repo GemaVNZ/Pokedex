@@ -14,10 +14,19 @@ class PokemonViewCell: UITableViewCell {
     
     @IBOutlet weak var nameLabel: UILabel!
     
+    @IBOutlet weak var pokemonIDLabel: UILabel!
+    
+    @IBOutlet weak var typeColorView: UIView!
+    
+    @IBOutlet weak var pokemonIconImageView: UIImageView!
+    
+    @IBOutlet weak var pokemontypeLabel: UILabel!
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
     }
+    
     
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
@@ -26,14 +35,17 @@ class PokemonViewCell: UITableViewCell {
     }
     
     func render(pokemon : Pokemon) {
-        nameLabel.text = pokemon.name
-        
         pokemonImage.image = nil
     
-        pokemonImage.image = UIImage(named: "image-placeholder")
+        nameLabel.text = pokemon.name.capitalized
+        pokemonIDLabel.text = "#\(pokemon.id)"
                
+        // Configurar la imagen del Pokémon
+        pokemonImage.image = UIImage(named: "image-placeholder")
                if let imageUrlString = pokemon.sprites.frontDefault, let imageUrl = URL(string: imageUrlString) {
+                   
                    let task = URLSession.shared.dataTask(with: imageUrl) { [weak self] data, response, error in
+                      
                        if let error = error {
                            print("Error al cargar la imagen: \(error.localizedDescription)")
                            DispatchQueue.main.async {
@@ -57,5 +69,17 @@ class PokemonViewCell: UITableViewCell {
                } else {
                    pokemonImage.image = UIImage(named: "image-placeholder")
                }
+               
+               if let primaryType = pokemon.types.first?.type {
+                   pokemontypeLabel.text = primaryType.name.capitalized
+                   pokemonIconImageView.image = UIImage(named: primaryType.name)
+            
+                   pokemonIconImageView.tintColor = UIColor(named: primaryType.name)
+                   
+               } else {
+                   pokemontypeLabel.text = "Unknown"
+                   pokemonIconImageView.image = nil
+                   pokemonIconImageView.tintColor = .clear
+               }
            }
-}
+       }

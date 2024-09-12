@@ -6,133 +6,165 @@
 //
 
 import Foundation
+import UIKit
 
 class PokemonProvider {
     
+    private let networkManager = NetworkManager()
+    private let batchSize = 1000  // Tamaño del lote, ajusta según sea necesario
+    
     func loadAllPokemons(completion: @escaping (Result<[Pokemon], Error>) -> Void) {
-            let urlString = "https://pokeapi.co/api/v2/pokemon?limit=100000&offset=0"
+        var allPokemons: [Pokemon] = []
+        var currentOffset = 0
+        
+        func loadNextBatch() {
+            let urlString = "https://pokeapi.co/api/v2/pokemon?limit=\(batchSize)&offset=\(currentOffset)"
             
-            guard let url = URL(string: urlString) else {
-                let error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
-                completion(.failure(error))
-                return
-            }
-            
-            let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
-                if let error = error {
-                    print("Error de red: \(error.localizedDescription)")
-                    completion(.failure(error))
-                    return
-                }
-                
-                guard let data = data else {
-                    let error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No se recibió ningún dato"])
-                    completion(.failure(error))
-                    return
-                }
-                
-                do {
-                    let decoder = JSONDecoder()
-                    let response = try decoder.decode(PokemonListResponse.self, from: data)
-                    
-                    // Crear un grupo de despacho para manejar la carga de detalles de Pokémon
+            networkManager.loadData(from: urlString, decodeType: PokemonListResponse.self) { result in
+                switch result {
+                case .success(let response):
+                    print("Pokémon List Response: \(response)") // Imprime la respuesta para verificar
                     let dispatchGroup = DispatchGroup()
-                    var pokemons: [Pokemon] = []
                     
                     for entry in response.results {
                         dispatchGroup.enter()
                         
                         self.loadPokemonDetails(from: entry.url) { result in
                             switch result {
-                            case .success(let pokemon):
-                                pokemons.append(pokemon)
+                            case .success(var pokemon):
+                                // Cargar la especie del Pokémon
+                                self.loadPokemonSpecies(from: pokemon.species.url) { speciesResult in
+                                    switch speciesResult {
+                                    case .success(let species):
+                                        pokemon.speciesData = species // Asignar datos de especie a Pokémon
+                                        print("Loaded Pokémon Species: \(species)")
+                                        
+                                        // Cargar la cadena de evolución para la especie del Pokémon
+                                        self.loadEvolutionChain(from: species.evolutionChain.url) { evolutionResult in
+                                            switch evolutionResult {
+                                            case .success(let evolutions):
+                                                print("Loaded Pokémon Evolutions: \(evolutions)")
+                                                pokemon.evolutions = evolutions
+                                                
+                                                // Cargar relaciones de daño
+                                                self.loadDamageRelations(for: pokemon) { damageResult in
+                                                    switch damageResult {
+                                                    case .success(let damageRelations):
+                                                        pokemon.damageRelations = damageRelations
+                                                    case .failure(let error):
+                                                        print("Error al cargar relaciones de daño del Pokémon \(pokemon.name): \(error.localizedDescription)")
+                                                    }
+                                                    allPokemons.append(pokemon)
+                                                    dispatchGroup.leave()
+                                                }
+                                                
+                                            case .failure(let error):
+                                                print("Error al cargar evoluciones del Pokémon \(pokemon.name): \(error.localizedDescription)")
+                                                dispatchGroup.leave()
+                                            }
+                                        }
+                                        
+                                    case .failure(let error):
+                                        print("Error al cargar especie del Pokémon \(pokemon.name): \(error.localizedDescription)")
+                                        dispatchGroup.leave()
+                                    }
+                                }
+                                
                             case .failure(let error):
                                 print("Error al cargar detalles del Pokémon \(entry.name): \(error.localizedDescription)")
+                                dispatchGroup.leave()
                             }
-                            dispatchGroup.leave()
                         }
                     }
                     
                     dispatchGroup.notify(queue: .main) {
-                        completion(.success(pokemons))
+                        if response.results.count < self.batchSize {
+                            // No hay más Pokémon para cargar
+                            completion(.success(allPokemons))
+                        } else {
+                            // Hay más Pokémon, cargar el siguiente lote
+                            currentOffset += self.batchSize
+                            loadNextBatch()
+                        }
                     }
                     
-                } catch {
-                    print("Error al decodificar la respuesta JSON: \(error.localizedDescription)")
+                case .failure(let error):
                     completion(.failure(error))
                 }
             }
-            
-            task.resume()
         }
         
-        // Nueva función para cargar los detalles de un Pokémon específico
-    func loadPokemonDetails(from urlString: String, completion: @escaping (Result<Pokemon, Error>) -> Void) {
-            guard let url = URL(string: urlString) else {
-                let error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
-                completion(.failure(error))
-                return
-            }
-            
-            let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
-                if let error = error {
-                    print("Error de red: \(error.localizedDescription)")
-                    completion(.failure(error))
-                    return
-                }
-                
-                guard let data = data else {
-                    let error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No se recibió ningún dato"])
-                    completion(.failure(error))
-                    return
-                }
-                
-                do {
-                    let decoder = JSONDecoder()
-                    let pokemon = try decoder.decode(Pokemon.self, from: data)
-                    completion(.success(pokemon))
-                } catch {
-                    print("Error al decodificar los detalles del Pokémon: \(error.localizedDescription)")
-                    completion(.failure(error))
-                }
-            }
-            
-            task.resume()
-        }
+        loadNextBatch()
+    }
     
     func searchPokemonbyName(_ name: String, completion: @escaping (Result<Pokemon, Error>) -> Void) {
         let urlString = "https://pokeapi.co/api/v2/pokemon/\(name.lowercased())"
-        
-        guard let url = URL(string: urlString) else {
-            let error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "URL inválida"])
-            completion(.failure(error))
+        networkManager.loadData(from: urlString, decodeType: Pokemon.self, completion: completion)
+    }
+    
+    func loadPokemonDetails(from urlString: String, completion: @escaping (Result<Pokemon, Error>) -> Void) {
+        networkManager.loadData(from: urlString, decodeType: Pokemon.self, completion: completion)
+    }
+    
+    func loadPokemonSpecies(from urlString: String, completion: @escaping (Result<PokemonSpecies, Error>) -> Void) {
+        networkManager.loadData(from: urlString, decodeType: PokemonSpecies.self, completion: completion)
+    }
+    
+    func loadEvolutionChain(from url: String, completion: @escaping (Result<[PokemonEvolution], Error>) -> Void) {
+        guard let url = URL(string: url) else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "URL inválida."])))
             return
         }
         
-        let task = URLSession.shared.dataTask(with: url) { (data, response, error) in
-            if let error = error {
-                print("Error de red: \(error.localizedDescription)")
-                completion(.failure(error))
-                return
-            }
-            
-            guard let data = data else {
-                let error = NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No se recibió ningún dato"])
-                completion(.failure(error))
-                return
-            }
-            
-            do {
-                let decoder = JSONDecoder()
-                let pokemon = try decoder.decode(Pokemon.self, from: data)
-                completion(.success(pokemon))
-            } catch {
-                print("Error al decodificar la respuesta JSON: \(error.localizedDescription)")
+        networkManager.loadData(from: url.absoluteString, decodeType: EvolutionChainResponse.self) { result in
+            switch result {
+            case .success(let response):
+                let evolutions = self.parseEvolutions(from: response)
+                completion(.success(evolutions))
+            case .failure(let error):
                 completion(.failure(error))
             }
         }
+    }
+    
+    private func loadDamageRelations(for pokemon: Pokemon, completion: @escaping (Result<DamageRelations, Error>) -> Void) {
+        guard let typeUrl = pokemon.types.first?.type.url else {
+            completion(.failure(NSError(domain: "", code: -1, userInfo: [NSLocalizedDescriptionKey: "No se encontró URL de tipo de Pokémon."])))
+            return
+        }
         
-        task.resume()
+        networkManager.loadData(from: typeUrl, decodeType: DamageRelationsResponse.self) { result in
+            switch result {
+            case .success(let response):
+                completion(.success(response.damageRelations))
+            case .failure(let error):
+                completion(.failure(error))
+            }
+        }
+    }
+    
+    private func parseEvolutions(from response: EvolutionChainResponse) -> [PokemonEvolution] {
+        var evolutions: [PokemonEvolution] = []
+        
+        func extractEvolutions(from chain: EvolutionChain, level: Int? = nil, condition: String? = nil) {
+            let speciesName = chain.species.name
+            let evolution = PokemonEvolution(
+                name: speciesName,
+                imageURL: URL(string: "https://raw.githubusercontent.com/PokeAPI/sprites/master/sprites/pokemon/other/official-artwork/\(speciesName).png"),
+                level: level,
+                condition: condition
+            )
+            evolutions.append(evolution)
+            
+            for evolutionChain in chain.evolvesTo {
+                let nextLevel = (level ?? 0) + 1 // Incrementa el nivel para la próxima evolución
+                let nextCondition = condition // Mantén la misma condición o actualízala si es necesario
+                extractEvolutions(from: evolutionChain, level: nextLevel, condition: nextCondition)
+            }
+        }
+        
+        // Inicia el proceso de extracción con la cadena principal
+        extractEvolutions(from: response.chain)
+        return evolutions
     }
 }
-

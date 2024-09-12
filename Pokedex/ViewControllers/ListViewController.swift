@@ -14,6 +14,7 @@ class ListViewController: UIViewController, UITableViewDataSource, UISearchBarDe
     
     @IBOutlet weak var searchBar: UISearchBar!
     
+    
     var pokemonList: [Pokemon] = []
     
     let pokemonProvider = PokemonProvider()
@@ -97,7 +98,7 @@ class ListViewController: UIViewController, UITableViewDataSource, UISearchBarDe
         guard !isLoading else { return }
         
         isLoading = true
-        pokemonProvider.searchPokemonbyName(name) { [weak self] result in
+        pokemonProvider.searchPokemonbyName(name) { [weak self] (result: Result<Pokemon, Error>) in
             guard let self = self else { return }
             
             DispatchQueue.main.async {
@@ -123,27 +124,27 @@ class ListViewController: UIViewController, UITableViewDataSource, UISearchBarDe
     }
 
 
-        private func loadAllPokemons() {
-            guard !isLoading else { return }
+    private func loadAllPokemons() {
+        guard !isLoading else { return }
+        
+        isLoading = true
+        pokemonProvider.loadAllPokemons { [weak self] result in
+            guard let self = self else { return }
             
-            isLoading = true
-            pokemonProvider.loadAllPokemons { [weak self] result in
-                guard let self = self else { return }
+            DispatchQueue.main.async {
+                self.isLoading = false
                 
-                DispatchQueue.main.async {
-                    self.isLoading = false
+                switch result {
+                case .success(let pokemons):
+                    self.pokemonList = pokemons
+                    self.tableView.reloadData()
+                    print("Todos los Pokémon cargados con éxito.")
                     
-                    switch result {
-                    case .success(let pokemons):
-                        self.pokemonList = pokemons
-                        self.tableView.reloadData()
-                        print("Todos los Pokémon cargados con éxito.")
-                        
-                    case .failure(let error):
-                        print("Error al cargar todos los Pokémon: \(error.localizedDescription)")
-                        let alert = UIAlertController(title: "Error", message: "No se pudieron cargar los Pokémon.", preferredStyle: .alert)
-                        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
-                        self.present(alert, animated: true, completion: nil)
+                case .failure(let error):
+                    print("Error al cargar todos los Pokémon: \(error.localizedDescription)")
+                    let alert = UIAlertController(title: "Error", message: "No se pudieron cargar los Pokémon.", preferredStyle: .alert)
+                    alert.addAction(UIAlertAction(title: "OK", style: .default, handler: nil))
+                    self.present(alert, animated: true, completion: nil)
                 }
             }
         }
